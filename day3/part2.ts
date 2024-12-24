@@ -1,24 +1,36 @@
 import * as fs from "fs";
 
 let text = fs.readFileSync("input.txt", "utf-8");
-
-let total = 0;
-
 let strIndex = 0;
 const mulPairs: string[] = [];
-
-function splitText(firstIndex: number, secondIndex: number, lastIndex: number) {
-  text = text.slice(firstIndex, secondIndex) + text.slice(lastIndex);
-}
+let total = 0;
+let enabled = true;
 
 while (strIndex !== -1) {
   strIndex = text.indexOf("mul(");
-  let charsArr = text.split("");
+  const rest = text.slice(0, strIndex);
 
+  const doIndex = rest.includes("do()") && rest.lastIndexOf("do()");
+  const dontIndex = rest.includes("don't()") && rest.lastIndexOf("don't()");
+
+  if (Boolean(doIndex)) enabled = true;
+
+  if (Boolean(dontIndex)) {
+    if (enabled) {
+      enabled = dontIndex > doIndex || !Boolean(doIndex) ? false : true;
+    }
+  }
+
+  if (!enabled) {
+    text = text.slice(strIndex + 4);
+    continue;
+  }
+
+  let charsArr = text.split("");
   let i = strIndex + 4;
 
   if (isNaN(Number(charsArr[i]))) {
-    splitText(0, strIndex, i);
+    text = text.slice(i);
     continue;
   }
 
@@ -35,7 +47,7 @@ while (strIndex !== -1) {
         charsArr[i] !== ")") ||
       numOfCommas > 1
     ) {
-      splitText(0, strIndex, i);
+      text = text.slice(i);
       break;
     }
 
@@ -47,7 +59,7 @@ while (strIndex !== -1) {
       const mulStr = charsArr.slice(strIndex, i + 1).join("");
 
       mulPairs.push(mulStr);
-      splitText(0, strIndex, i);
+      text = text.slice(i);
       break;
     }
 

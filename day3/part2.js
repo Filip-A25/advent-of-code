@@ -2,18 +2,30 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var fs = require("fs");
 var text = fs.readFileSync("input.txt", "utf-8");
-var total = 0;
 var strIndex = 0;
 var mulPairs = [];
-function splitText(firstIndex, secondIndex, lastIndex) {
-    text = text.slice(firstIndex, secondIndex) + text.slice(lastIndex);
-}
+var total = 0;
+var enabled = true;
 while (strIndex !== -1) {
     strIndex = text.indexOf("mul(");
+    var rest = text.slice(0, strIndex);
+    var doIndex = rest.includes("do()") && rest.lastIndexOf("do()");
+    var dontIndex = rest.includes("don't()") && rest.lastIndexOf("don't()");
+    if (Boolean(doIndex))
+        enabled = true;
+    if (Boolean(dontIndex)) {
+        if (enabled) {
+            enabled = dontIndex > doIndex || !Boolean(doIndex) ? false : true;
+        }
+    }
+    if (!enabled) {
+        text = text.slice(strIndex + 4);
+        continue;
+    }
     var charsArr = text.split("");
     var i = strIndex + 4;
     if (isNaN(Number(charsArr[i]))) {
-        splitText(0, strIndex, i);
+        text = text.slice(i);
         continue;
     }
     var numOfCommas = 0;
@@ -25,7 +37,7 @@ while (strIndex !== -1) {
             charsArr[i] !== "," &&
             charsArr[i] !== ")") ||
             numOfCommas > 1) {
-            splitText(0, strIndex, i);
+            text = text.slice(i);
             break;
         }
         if (charsArr[i] === ")" &&
@@ -33,7 +45,7 @@ while (strIndex !== -1) {
             numOfCommas === 1) {
             var mulStr = charsArr.slice(strIndex, i + 1).join("");
             mulPairs.push(mulStr);
-            splitText(0, strIndex, i);
+            text = text.slice(i);
             break;
         }
         i++;
